@@ -341,4 +341,68 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   });
+
+  // --- Testimonials Carousel ---
+  const testiSlides = document.querySelectorAll('.testi-slide');
+  const testiDots   = document.querySelectorAll('.testi-dot');
+  const testiPrev   = document.getElementById('testiPrev');
+  const testiNext   = document.getElementById('testiNext');
+  let testiCurrent  = 0;
+  let testiTimer    = null;
+
+  function goToTesti(index) {
+    if (testiSlides.length === 0) return;
+    testiSlides[testiCurrent].classList.remove('active');
+    testiDots[testiCurrent] && testiDots[testiCurrent].classList.remove('active');
+    testiCurrent = (index + testiSlides.length) % testiSlides.length;
+    testiSlides[testiCurrent].classList.add('active');
+    testiDots[testiCurrent] && testiDots[testiCurrent].classList.add('active');
+  }
+
+  function startTestiAuto() {
+    clearInterval(testiTimer);
+    testiTimer = setInterval(() => goToTesti(testiCurrent + 1), 5000);
+  }
+
+  if (testiSlides.length > 0) {
+    // Arrow buttons
+    testiPrev && testiPrev.addEventListener('click', () => { goToTesti(testiCurrent - 1); startTestiAuto(); });
+    testiNext && testiNext.addEventListener('click', () => { goToTesti(testiCurrent + 1); startTestiAuto(); });
+
+    // Dot clicks
+    testiDots.forEach((dot, i) => {
+      dot.addEventListener('click', () => { goToTesti(i); startTestiAuto(); });
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      const section = document.getElementById('testimonials');
+      if (!section) return;
+      const rect = section.getBoundingClientRect();
+      if (rect.top < window.innerHeight && rect.bottom > 0) {
+        if (e.key === 'ArrowLeft')  { goToTesti(testiCurrent - 1); startTestiAuto(); }
+        if (e.key === 'ArrowRight') { goToTesti(testiCurrent + 1); startTestiAuto(); }
+      }
+    });
+
+    // Touch swipe support
+    const carousel = document.getElementById('testiCarousel');
+    if (carousel) {
+      let touchStartX = 0;
+      carousel.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+      carousel.addEventListener('touchend', (e) => {
+        const dx = e.changedTouches[0].clientX - touchStartX;
+        if (Math.abs(dx) > 50) { goToTesti(dx < 0 ? testiCurrent + 1 : testiCurrent - 1); startTestiAuto(); }
+      });
+    }
+
+    // Pause on hover
+    const wrapper = document.querySelector('.testi-carousel-wrapper');
+    if (wrapper) {
+      wrapper.addEventListener('mouseenter', () => clearInterval(testiTimer));
+      wrapper.addEventListener('mouseleave', startTestiAuto);
+    }
+
+    startTestiAuto();
+  }
 });
